@@ -1,16 +1,16 @@
-from typing import Dict, cast
+from typing import Any, Dict, cast
 from xml.etree import ElementTree
 
-
-class ViewNode(Dict):
-    pass
+ViewNode = Dict[str, Any]
 
 
-def parse_node(xml_node) -> ViewNode:
+def parse_node(xml_node: ElementTree.Element) -> ViewNode:
     attrib = xml_node.attrib
 
-    node = ViewNode()
-    node["index"] = int(attrib.get("index"))
+    node: ViewNode = {}
+    index_value = attrib.get("index")
+    if index_value is not None:
+        node["index"] = int(index_value)
     node["package"] = attrib.get("package")
     node["bounds"] = attrib.get("bounds")
 

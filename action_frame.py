@@ -1,7 +1,9 @@
-from typing import Optional, TypedDict
+from typing import Any, Dict, Optional, TypedDict
 
 
 class ActionFrame(TypedDict):
-    element: dict
+    """Description of a single action performed during scenario exploration."""
+
+    element: Dict[str, Any]
     type: str
     data: Optional[str]

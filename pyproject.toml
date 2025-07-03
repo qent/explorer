@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "explorer"
+version = "0.1.0"
+description = "Toolkit for automating Android interaction scenarios"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name = "Explorer Team"}]
+dependencies = [
+    "langchain",
+    "langgraph",
+    "uiautomator2",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+
+development = [
+    "black",
+    "isort",
+    "ruff",
+    "mypy",
+    "pytest",
+]
+
+[tool.setuptools.packages.find]
+include = ["explorer*"]
+
