@@ -5,9 +5,6 @@ from time import sleep
 from typing import List, Optional, TypedDict, cast
 
 import uiautomator2
-from explorer.action_frame import ActionFrame
-from explorer.element_navigator import ElementNavigator
-from explorer.utils import get_file_content
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
@@ -15,6 +12,10 @@ from langgraph.constants import START
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
 from uiautomator2 import XPathElementNotFoundError
+
+from explorer.action_frame import ActionFrame
+from explorer.element_navigator import ElementNavigator
+from explorer.utils import get_file_content
 
 # mypy: ignore-errors
 
