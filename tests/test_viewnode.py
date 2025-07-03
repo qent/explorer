@@ -1,6 +1,4 @@
-import pytest
-
-from explorer.viewnode import parse_xml_to_tree
+from explorer.viewnode import parse_xml_to_tree, without_fields
 
 XML = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
@@ -13,21 +11,19 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
 
 def test_parse_xml_to_tree() -> None:
     tree = parse_xml_to_tree(XML)
-    assert tree[0]["index"] == 0
-    assert tree[0]["class"] == "android.widget.LinearLayout"
-    children = tree[0]["children"]
+    root = tree[0]
+    assert root.index == 0
+    assert root.class_name == "android.widget.LinearLayout"
+    children = root.children
     assert len(children) == 1
     child = children[0]
-    assert child["index"] == 1
-    assert child["text"] == "Hello"
-    assert "resource-id" in child
+    assert child.index == 1
+    assert child.text == "Hello"
+    assert child.resource_id is not None
 
 
-def test_without_fields(monkeypatch: pytest.MonkeyPatch) -> None:
-    import explorer.viewnode as viewnode
-
-    monkeypatch.setattr(viewnode, "ViewNode", dict)
+def test_without_fields() -> None:
     tree = parse_xml_to_tree(XML)
-    cleaned = viewnode.without_fields(tree, ["bounds"])
-    assert "bounds" not in cleaned[0]
-    assert "bounds" not in cleaned[0]["children"][0]
+    cleaned = without_fields(tree, ["bounds"])
+    assert cleaned[0].bounds is None
+    assert cleaned[0].children[0].bounds is None
