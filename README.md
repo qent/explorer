@@ -49,6 +49,7 @@ The main entry point is `ScenarioExplorer`. Provide it with a `BaseChatModel` im
 
 ```python
 from langchain.chat_models import ChatOpenAI  # or any other model
+
 from explorer.scenario_explorer import ScenarioExplorer
 
 model = ChatOpenAI()
@@ -59,6 +60,19 @@ for frame in result:
 ```
 
 Each item in `result` is an `ActionFrame` describing the action performed, including element metadata and optional input text. Interruptions such as missing elements are also recorded.
+
+## Example
+
+An example CLI is provided in `example/run_explorer.py`. Pass your Anthropic
+API token and a text file describing the scenario:
+
+```bash
+python example/run_explorer.py <ANTHROPIC_TOKEN> /path/to/scenario.txt
+```
+
+The script runs the scenario against the currently connected emulator or device
+and writes the formatted results to `explore_result.json` in the working
+directory.
 
 ## Extending the project
 
