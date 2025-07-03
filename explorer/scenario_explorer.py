@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum
+from pathlib import Path
 from time import sleep
 from typing import List, Optional, TypedDict, cast
-from pathlib import Path
 
 import uiautomator2
 from langchain_core.language_models import BaseChatModel
@@ -67,7 +67,9 @@ class ScenarioExplorer:
 
     def _extract_scenario(self, state: ExplorerState) -> ExplorerState:
         parser = PydanticOutputParser(pydantic_object=Scenario)
-        prompt_path = Path(__file__).parent / "prompts" / "extract_step_by_step_scenario.md"
+        prompt_path = (
+            Path(__file__).parent / "prompts" / "extract_step_by_step_scenario.md"
+        )
         template_str = get_file_content(str(prompt_path))
         request = PromptTemplate.from_template(template_str).invoke(
             {

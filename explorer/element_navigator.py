@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_core.language_models import BaseChatModel
@@ -183,6 +183,10 @@ Elements hierarchy:
             self.logger.info(f"Retry: {elements} with xpath = {xpath}")
             return "find_another_xpath"
 
-    def find_element_info(self, request: str) -> dict[str, object]:
+    def find_element_info(self, request: str) -> dict[str, Any]:
+        """Return details about the requested element in a JSON-friendly format."""
+
         result = self._graph.invoke({"element_request": request})
-        return {k: v for k, v in result.items() if k != "messages"}
+        info = {k: v for k, v in result.items() if k != "messages"}
+        info["hierarchy"] = [node.to_dict() for node in info.get("hierarchy", [])]
+        return info
