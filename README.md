@@ -34,7 +34,7 @@ Development utilities are also included in `requirements.txt`.
 The library can be installed directly from GitHub:
 
 ```bash
-pip install git+https://github.com/<username>/explorer.git
+pip install git+https://github.com/qent/explorer.git
 ```
 
 For development install optional dependencies as well:
