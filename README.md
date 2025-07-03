@@ -67,6 +67,8 @@ This repository favours modern, explicit Python. Follow these principles when co
 - Always include type hints for all public functions and methods.
 - Keep modules small and focused.
 - Document new functions and classes with docstrings.
+- Prefer pure functions and clear naming.
+- Avoid long argument lists by introducing small data classes.
 - Validate data with `pydantic` or dataclasses.
 - Write tests for new behaviour using `pytest`.
 - Format code with `black` and `isort`, run `ruff` and `mypy` before committing.

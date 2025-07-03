@@ -29,3 +29,10 @@ development = [
 [tool.setuptools.packages.find]
 include = ["explorer*"]
 
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+

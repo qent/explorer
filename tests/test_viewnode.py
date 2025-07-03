@@ -1,3 +1,5 @@
+import pytest
+
 from explorer.viewnode import parse_xml_to_tree
 
 XML = """<?xml version='1.0' encoding='UTF-8'?>
@@ -9,7 +11,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
 </hierarchy>"""
 
 
-def test_parse_xml_to_tree():
+def test_parse_xml_to_tree() -> None:
     tree = parse_xml_to_tree(XML)
     assert tree[0]["index"] == 0
     assert tree[0]["class"] == "android.widget.LinearLayout"
@@ -21,7 +23,7 @@ def test_parse_xml_to_tree():
     assert "resource-id" in child
 
 
-def test_without_fields(monkeypatch):
+def test_without_fields(monkeypatch: pytest.MonkeyPatch) -> None:
     import explorer.viewnode as viewnode
 
     monkeypatch.setattr(viewnode, "ViewNode", dict)

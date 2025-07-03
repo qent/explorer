@@ -1,7 +1,7 @@
 from typing import cast
 
 from langgraph.constants import END
-from uiautomator2.xpath import XPathError
+from uiautomator2.xpath import XPathError  # type: ignore[import-untyped]
 
 from explorer.element_navigator import AgentState, ElementNavigator
 
