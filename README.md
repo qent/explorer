@@ -31,6 +31,14 @@ Development utilities are also included in `requirements.txt`.
 
 ## Installation
 
+The library can be installed directly from GitHub:
+
+```bash
+pip install git+https://github.com/<username>/explorer.git
+```
+
+For development install optional dependencies as well:
+
 ```bash
 pip install -r requirements.txt
 ```
