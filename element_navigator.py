@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import Annotated, TypedDict
 
-from explorer.viewnode import ViewNode, parse_xml_to_tree, without_fields
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AnyMessage
@@ -13,6 +12,8 @@ from langgraph.graph import StateGraph, add_messages
 from langgraph.types import RetryPolicy
 from uiautomator2 import Device
 from uiautomator2.xpath import XPathError
+
+from explorer.viewnode import ViewNode, parse_xml_to_tree, without_fields
 
 # mypy: ignore-errors
 

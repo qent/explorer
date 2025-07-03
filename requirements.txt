@@ -1,0 +1,9 @@
+langchain
+langgraph
+uiautomator2
+pydantic
+black
+isort
+ruff
+mypy
+pytest
