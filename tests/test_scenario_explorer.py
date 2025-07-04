@@ -1,7 +1,7 @@
 from typing import cast
 
 import pytest
-from langchain_core.language_models import BaseChatModel  # type: ignore[import-not-found]
+from langchain_core.language_models import BaseChatModel
 
 from explorer.scenario_explorer import (
     ActionType,
@@ -29,9 +29,7 @@ class FakeDevice:
         self.stopped = False
 
     def xpath(self, xpath: str) -> "FakeSelector":
-        from explorer.scenario_explorer import (  # type: ignore[attr-defined]
-            XPathElementNotFoundError,
-        )
+        from uiautomator2 import XPathElementNotFoundError  # type: ignore[import-untyped]  # isort: skip
 
         if xpath == "//notfound":
             raise XPathElementNotFoundError("not found")

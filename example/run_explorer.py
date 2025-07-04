@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import httpx
@@ -22,8 +23,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run ScenarioExplorer using Claude 3.5 Haiku"
     )
-    parser.add_argument("token", help="Anthropic API token")
-    parser.add_argument("scenario_file", type=Path, help="Path to scenario text file")
+    parser.add_argument(
+        "--token",
+        help=(
+            "Anthropic API token. Defaults to the value of the ANTHROPIC_API_KEY"
+            " environment variable."
+        ),
+        default=os.getenv("ANTHROPIC_API_KEY"),
+    )
+    parser.add_argument(
+        "--scenario-file",
+        type=Path,
+        required=True,
+        help="Path to scenario text file",
+    )
     parser.add_argument(
         "--api-url",
         dest="api_url",
