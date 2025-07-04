@@ -6,7 +6,8 @@ import argparse
 import json
 from pathlib import Path
 
-from langchain.chat_models import ChatAnthropic
+import httpx
+from langchain_anthropic import ChatAnthropic
 from langchain_core.callbacks import get_usage_metadata_callback
 
 from explorer.scenario_explorer import ScenarioExplorer
@@ -35,11 +36,13 @@ def main() -> None:
 
     model = ChatAnthropic(
         model_name="claude-3-5-haiku-latest",
-        anthropic_api_key=args.token,
-        anthropic_api_url=args.api_url,
+        api_key=args.token,
+        base_url=args.api_url,
         temperature=0.0,
-        max_tokens=8000,
+        max_tokens_to_sample=8000
     )
+    http_client_without_ssl_verification = httpx.Client(verify=False)
+    model._client._client = http_client_without_ssl_verification
 
     explorer = ScenarioExplorer(model)
     with get_usage_metadata_callback() as cb:
