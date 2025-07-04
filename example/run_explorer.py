@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from langchain_community.chat_models import ChatAnthropic
+from langchain.chat_models import ChatAnthropic
 from langchain_core.callbacks import get_usage_metadata_callback
 
 from explorer.scenario_explorer import ScenarioExplorer
@@ -23,6 +23,12 @@ def main() -> None:
     )
     parser.add_argument("token", help="Anthropic API token")
     parser.add_argument("scenario_file", type=Path, help="Path to scenario text file")
+    parser.add_argument(
+        "--api-url",
+        dest="api_url",
+        help="Custom Anthropic API URL",
+        default=None,
+    )
     args = parser.parse_args()
 
     scenario = args.scenario_file.read_text(encoding="utf-8")
@@ -30,6 +36,7 @@ def main() -> None:
     model = ChatAnthropic(
         model_name="claude-3-5-haiku-latest",
         anthropic_api_key=args.token,
+        anthropic_api_url=args.api_url,
         temperature=0.0,
         max_tokens=8000,
     )

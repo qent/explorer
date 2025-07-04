@@ -1,7 +1,7 @@
 from typing import cast
 
 import pytest
-from langchain_core.language_models import BaseChatModel
+from langchain_core.language_models import BaseChatModel  # type: ignore[import-not-found]
 
 from explorer.scenario_explorer import (
     ActionType,

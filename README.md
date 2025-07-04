@@ -65,10 +65,12 @@ Each item in `result` is an `ActionFrame` describing the action performed, inclu
 ## Example
 
 An example CLI is provided in `example/run_explorer.py`. Pass your Anthropic
-API token and a text file describing the scenario:
+API token and a text file describing the scenario. A custom API URL can be
+provided with the optional `--api-url` flag:
 
 ```bash
-python example/run_explorer.py <ANTHROPIC_TOKEN> /path/to/scenario.txt
+python example/run_explorer.py <ANTHROPIC_TOKEN> /path/to/scenario.txt \
+    --api-url https://example.com/v1
 ```
 
 The script runs the scenario against the currently connected emulator or device
