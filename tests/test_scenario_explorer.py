@@ -1,9 +1,7 @@
 from typing import cast
 
 import pytest
-from langchain_core.language_models import (
-    BaseChatModel,
-)
+from langchain_core.language_models import BaseChatModel
 
 from explorer.scenario_explorer import (
     ActionType,
@@ -27,6 +25,7 @@ class FakeDevice:
     def __init__(self) -> None:
         self.clicked: list[str] = []
         self.sent_keys: list[str] = []
+        self.pressed: list[str] = []
         self.stopped = False
 
     def xpath(self, xpath: str) -> "FakeSelector":
@@ -40,6 +39,9 @@ class FakeDevice:
 
     def send_keys(self, text: str) -> None:
         self.sent_keys.append(text)
+
+    def press(self, key: str) -> None:
+        self.pressed.append(key)
 
     def stop_uiautomator(self) -> None:
         self.stopped = True
@@ -68,6 +70,8 @@ def test_explore(monkeypatch: pytest.MonkeyPatch) -> None:
     scenario = Scenario(
         steps=[
             Step(element="btn1", data=None, action=ActionType.CLICK),
+            Step(element="home", data=None, action=ActionType.PRESS_KEY),
+            Step(element="bad", data=None, action=ActionType.PRESS_KEY),
             Step(element="input", data="hello", action=ActionType.TEXT_INPUT),
             Step(element="missing", data=None, action=ActionType.CLICK),
             Step(element="notfound", data=None, action=ActionType.CLICK),
@@ -80,10 +84,14 @@ def test_explore(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert device.stopped
     assert device.clicked == ["//btn1", "//input"]
+    assert device.pressed == ["home"]
     assert device.sent_keys == ["hello"]
     assert trace[0]["type"] == ActionType.CLICK
-    assert trace[1]["type"] == ActionType.TEXT_INPUT
+    assert trace[1]["type"] == ActionType.PRESS_KEY
     assert trace[2]["type"] == "INTERRUPTION"
-    assert trace[2]["data"] == "ElementNotFoundError"
-    assert trace[3]["type"] == "INTERRUPTION"
-    assert trace[3]["data"] == "XPathElementNotFoundError"
+    assert trace[2]["data"] == "InvalidKeyError"
+    assert trace[3]["type"] == ActionType.TEXT_INPUT
+    assert trace[4]["type"] == "INTERRUPTION"
+    assert trace[4]["data"] == "ElementNotFoundError"
+    assert trace[5]["type"] == "INTERRUPTION"
+    assert trace[5]["data"] == "XPathElementNotFoundError"
