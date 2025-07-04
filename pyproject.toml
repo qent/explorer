@@ -12,6 +12,7 @@ authors = [{name = "Explorer Team"}]
 dependencies = [
     "langchain",
     "langgraph",
+    "langchain_community",
     "uiautomator2",
     "pydantic",
 ]
