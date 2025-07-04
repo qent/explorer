@@ -1,5 +1,5 @@
 langchain
-langchain_community
+langchain_anthropic
 langgraph
 anthropic
 uiautomator2
