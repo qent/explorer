@@ -64,12 +64,16 @@ Each item in `result` is an `ActionFrame` describing the action performed, inclu
 
 ## Example
 
-An example CLI is provided in `example/run_explorer.py`. Pass your Anthropic
-API token and a text file describing the scenario. A custom API URL can be
-provided with the optional `--api-url` flag:
+An example CLI is provided in `example/run_explorer.py`. Pass the path to a
+scenario file and optionally your Anthropic API token. A custom API URL can be
+provided with the optional `--api-url` flag. When `--token` is omitted the
+script falls back to the value of the `ANTHROPIC_API_KEY` environment
+variable:
 
 ```bash
-python example/run_explorer.py <ANTHROPIC_TOKEN> /path/to/scenario.txt \
+python example/run_explorer.py \
+    --scenario-file /path/to/scenario.txt \
+    --token <ANTHROPIC_TOKEN> \
     --api-url https://example.com/v1
 ```
 
