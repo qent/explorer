@@ -1,5 +1,7 @@
 langchain
+langchain_community
 langgraph
+anthropic
 uiautomator2
 pydantic
 black
