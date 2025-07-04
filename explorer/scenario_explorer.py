@@ -24,17 +24,42 @@ from explorer.utils import get_file_content
 class ActionType(str, Enum):
     CLICK = "click"
     TEXT_INPUT = "text_input"
+    PRESS_KEY = "press_key"
+
+
+VALID_KEYS: set[str] = {
+    "home",
+    "back",
+    "left",
+    "right",
+    "up",
+    "down",
+    "center",
+    "menu",
+    "search",
+    "enter",
+    "delete",
+    "recent",
+    "volume_up",
+    "volume_down",
+    "volume_mute",
+    "camera",
+    "power",
+}
 
 
 class Step(BaseModel):
     """Model of action with interface element"""
 
-    element: str = Field(description="Short description of element for action")
+    element: str = Field(
+        description="Short description of element for action or name of the key"
+    )
     data: Optional[str] = Field(
         None, description="Data required for an action, such as text for a text input"
     )
     action: ActionType = Field(
-        ActionType.CLICK, description="Action type ('click', 'text_input', etc)"
+        ActionType.CLICK,
+        description="Action type ('click', 'text_input', 'press_key', etc)",
     )
 
 
@@ -87,6 +112,23 @@ class ScenarioExplorer:
         state["trace"] = []
 
         for step in state["user_scenario"].steps:
+            if step.action is ActionType.PRESS_KEY:
+                if step.element not in VALID_KEYS:
+                    interruption = ActionFrame(
+                        element={"key": step.element},
+                        type="INTERRUPTION",
+                        data="InvalidKeyError",
+                    )
+                    state["trace"].append(interruption)
+                    continue
+                device.press(step.element)
+                action = ActionFrame(
+                    element={"key": step.element},
+                    type=step.action,
+                    data=None,
+                )
+                state["trace"].append(action)
+                continue
             try:
                 element_info = cast(
                     dict[str, object], element_navigator.find_element_info(step.element)
