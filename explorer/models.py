@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import List, Optional
 
@@ -81,3 +81,12 @@ class ActionFrame:
     screen: Optional[ScreenInfo]
     action: ActionInfo
     error: Optional[Error]
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON serialisable representation of the frame."""
+
+        return {
+            "screen": asdict(self.screen) if self.screen else None,
+            "action": self.action.model_dump(),
+            "error": asdict(self.error) if self.error else None,
+        }
