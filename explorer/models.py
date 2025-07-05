@@ -1,0 +1,83 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
+# mypy: ignore-errors
+
+
+class ActionType(str, Enum):
+    CLICK = "click"
+    TEXT_INPUT = "text_input"
+    PRESS_KEY = "press_key"
+
+
+class ExecutionStatus(str, Enum):
+    PENDING = "pending"
+    EXECUTED = "executed"
+    BROKEN = "broken"
+
+
+class ElementInfo(BaseModel):
+    """Information about an element on the device screen."""
+
+    name: Optional[str] = Field(None, description="Device element name")
+    description: str = Field(description="Short description of element")
+    xpath: Optional[str] = Field(None, description="Element xpath")
+
+
+class ActionInfo(BaseModel):
+    """Model of action with device."""
+
+    element: ElementInfo = Field(
+        description="Short description of element for action or name of the key"
+    )
+    data: Optional[str] = Field(
+        None, description="Data required for an action, such as text for a text input"
+    )
+    type: ActionType = Field(
+        ActionType.CLICK,
+        description="Action type ('click', 'text_input', 'press_key', etc)",
+    )
+    status: ExecutionStatus = Field(
+        ExecutionStatus.PENDING,
+        description="Action executions status ('pending', 'executed', 'broken', etc)",
+    )
+
+
+class Scenario(BaseModel):
+    """Model of the interaction scenario with the application"""
+
+    actions: List[ActionInfo] = Field(
+        description="An ordered list of step-by-step actions on application"
+    )
+
+
+@dataclass
+class ScreenInfo:
+    """Description of the current screen."""
+
+    name: str
+    description: str
+    hierarchy: str
+    image: Optional[str] = None
+
+
+@dataclass
+class Error:
+    """Error occurred during action execution."""
+
+    type: str
+    message: Optional[str]
+
+
+@dataclass
+class ActionFrame:
+    """State of a single action during scenario execution."""
+
+    screen: Optional[ScreenInfo]
+    action: ActionInfo
+    error: Optional[Error]

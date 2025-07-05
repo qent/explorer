@@ -1,5 +1,7 @@
 from explorer.viewnode import parse_xml_to_tree, without_fields
 
+# mypy: ignore-errors
+
 XML = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node index='0' package='com.app' class='android.widget.LinearLayout' bounds='[0,0][100,100]' visible-to-user='true'>

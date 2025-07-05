@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from enum import Enum
 from pathlib import Path
 from time import sleep
-from typing import List, Optional, TypedDict, cast
+from typing import TypedDict, cast
 
 import uiautomator2
 from langchain_core.language_models import BaseChatModel
@@ -11,20 +10,20 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from langgraph.constants import START
 from langgraph.graph import StateGraph
-from pydantic import BaseModel, Field
 from uiautomator2 import XPathElementNotFoundError
 
-from explorer.action_frame import ActionFrame
 from explorer.element_navigator import ElementNavigator
+from explorer.models import (
+    ActionFrame,
+    ActionType,
+    Error,
+    ExecutionStatus,
+    Scenario,
+    ScreenInfo,
+)
 from explorer.utils import get_file_content
 
 # mypy: ignore-errors
-
-
-class ActionType(str, Enum):
-    CLICK = "click"
-    TEXT_INPUT = "text_input"
-    PRESS_KEY = "press_key"
 
 
 VALID_KEYS: set[str] = {
@@ -48,38 +47,16 @@ VALID_KEYS: set[str] = {
 }
 
 
-class Step(BaseModel):
-    """Model of action with interface element"""
-
-    element: str = Field(
-        description="Short description of element for action or name of the key"
-    )
-    data: Optional[str] = Field(
-        None, description="Data required for an action, such as text for a text input"
-    )
-    action: ActionType = Field(
-        ActionType.CLICK,
-        description="Action type ('click', 'text_input', 'press_key', etc)",
-    )
-
-
-class Scenario(BaseModel):
-    """Model of the interaction scenario with the application interface"""
-
-    steps: List[Step] = Field(
-        description="An ordered list of step-by-step actions on interface elements"
-    )
-
-
 class ExplorerState(TypedDict):
     user_request: str
     user_scenario: Scenario
-    actual_scenario: Scenario
     trace: list[ActionFrame]
 
 
 class ScenarioExplorer:
-    def __init__(self, model: BaseChatModel):
+    """High level scenario execution engine."""
+
+    def __init__(self, model: BaseChatModel) -> None:
         graph_builder = StateGraph(ExplorerState)
         graph_builder.add_node("extract_scenario", self._extract_scenario)
         graph_builder.add_node("explore", self._explore)
@@ -109,66 +86,74 @@ class ScenarioExplorer:
     def _explore(self, state: ExplorerState) -> ExplorerState:
         device = uiautomator2.connect()
         element_navigator = ElementNavigator(self._model, device)
-        state["trace"] = []
 
-        for step in state["user_scenario"].steps:
-            if step.action is ActionType.PRESS_KEY:
-                if step.element not in VALID_KEYS:
-                    interruption = ActionFrame(
-                        element={"key": step.element},
-                        type="INTERRUPTION",
-                        data="InvalidKeyError",
-                    )
-                    state["trace"].append(interruption)
-                    continue
-                device.press(step.element)
-                action = ActionFrame(
-                    element={"key": step.element},
-                    type=step.action,
-                    data=None,
-                )
-                state["trace"].append(action)
+        state["trace"] = [
+            ActionFrame(screen=None, action=action, error=None)
+            for action in state["user_scenario"].actions
+        ]
+
+        for frame in state["trace"]:
+            action = frame.action
+            if action.status is ExecutionStatus.EXECUTED:
                 continue
-            try:
-                element_info = cast(
-                    dict[str, object], element_navigator.find_element_info(step.element)
-                )
-                try:
-                    selector = device.xpath(element_info["element"]["xpath"])
 
-                    if step.action is ActionType.TEXT_INPUT:
+            if action.type is ActionType.PRESS_KEY:
+                key = action.element.description
+                if key not in VALID_KEYS:
+                    frame.error = Error(type="InvalidKeyError", message=None)
+                    frame.screen = ScreenInfo(
+                        name="",
+                        description="",
+                        hierarchy=element_navigator.full_hierarchy,
+                    )
+                    action.status = ExecutionStatus.BROKEN
+                    break
+                device.press(key)
+                action.status = ExecutionStatus.EXECUTED
+                continue
+
+            try:
+                info = cast(
+                    dict[str, object],
+                    element_navigator.find_element_info(action.element.description),
+                )
+                screen = ScreenInfo(
+                    name=cast(str, info.get("screen", "")),
+                    description=cast(str, info.get("screen_description", "")),
+                    hierarchy=element_navigator.full_hierarchy,
+                )
+                element_dict = cast(dict[str, object], info.get("element", {}))
+                action.element.name = cast(str | None, element_dict.get("name"))
+                action.element.xpath = cast(str | None, element_dict.get("xpath"))
+                frame.screen = screen
+                try:
+                    selector = device.xpath(action.element.xpath)
+                    if action.type is ActionType.TEXT_INPUT:
                         selector.click()
                         sleep(3)
-                        device.send_keys(step.data)
-                        action = ActionFrame(
-                            element=element_info, type=step.action, data=step.data
-                        )
+                        if action.data:
+                            device.send_keys(action.data)
                     else:
                         selector.click()
-                        action = ActionFrame(
-                            element=element_info, type=step.action, data=None
-                        )
-
-                    state["trace"].append(action)
+                    action.status = ExecutionStatus.EXECUTED
                 except XPathElementNotFoundError:
-                    interruption = ActionFrame(
-                        element=element_info,
-                        type="INTERRUPTION",
-                        data="XPathElementNotFoundError",
+                    frame.error = Error(type="XPathElementNotFoundError", message=None)
+                    frame.screen = ScreenInfo(
+                        name="",
+                        description="",
+                        hierarchy=element_navigator.full_hierarchy,
                     )
-                    state["trace"].append(interruption)
+                    action.status = ExecutionStatus.BROKEN
                     break
             except LookupError:
-                element_info = {
-                    "hierarchy": element_navigator.full_hierarchy,
-                    "element_request": step.element,
-                }
-                interruption = ActionFrame(
-                    element=element_info,
-                    type="INTERRUPTION",
-                    data="ElementNotFoundError",
+                frame.error = Error(type="ElementNotFoundError", message=None)
+                frame.screen = ScreenInfo(
+                    name="",
+                    description="",
+                    hierarchy=element_navigator.full_hierarchy,
                 )
-                state["trace"].append(interruption)
+                action.status = ExecutionStatus.BROKEN
+                break
 
         device.stop_uiautomator()
         return state
