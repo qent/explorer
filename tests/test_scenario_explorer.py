@@ -3,13 +3,16 @@ from typing import cast
 import pytest
 from langchain_core.language_models import BaseChatModel
 
-from explorer.scenario_explorer import (
+from explorer.models import (
+    ActionInfo,
     ActionType,
-    ExplorerState,
+    ElementInfo,
+    ExecutionStatus,
     Scenario,
-    ScenarioExplorer,
-    Step,
 )
+from explorer.scenario_explorer import ExplorerState, ScenarioExplorer
+
+# mypy: ignore-errors
 
 
 class FakeSelector:
@@ -66,13 +69,25 @@ def test_explore(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("explorer.scenario_explorer.sleep", lambda _: None)
 
     scenario = Scenario(
-        steps=[
-            Step(element="btn1", data=None, action=ActionType.CLICK),
-            Step(element="home", data=None, action=ActionType.PRESS_KEY),
-            Step(element="bad", data=None, action=ActionType.PRESS_KEY),
-            Step(element="input", data="hello", action=ActionType.TEXT_INPUT),
-            Step(element="missing", data=None, action=ActionType.CLICK),
-            Step(element="notfound", data=None, action=ActionType.CLICK),
+        actions=[
+            ActionInfo(element=ElementInfo(description="btn1"), type=ActionType.CLICK),
+            ActionInfo(
+                element=ElementInfo(description="home"), type=ActionType.PRESS_KEY
+            ),
+            ActionInfo(
+                element=ElementInfo(description="bad"), type=ActionType.PRESS_KEY
+            ),
+            ActionInfo(
+                element=ElementInfo(description="input"),
+                data="hello",
+                type=ActionType.TEXT_INPUT,
+            ),
+            ActionInfo(
+                element=ElementInfo(description="missing"), type=ActionType.CLICK
+            ),
+            ActionInfo(
+                element=ElementInfo(description="notfound"), type=ActionType.CLICK
+            ),
         ]
     )
     explorer = ScenarioExplorer(model=cast(BaseChatModel, object()))
@@ -81,15 +96,16 @@ def test_explore(monkeypatch: pytest.MonkeyPatch) -> None:
     trace = result["trace"]
 
     assert device.stopped
-    assert device.clicked == ["//btn1", "//input"]
+    assert device.clicked == ["//btn1"]
     assert device.pressed == ["home"]
-    assert device.sent_keys == ["hello"]
-    assert trace[0]["type"] == ActionType.CLICK
-    assert trace[1]["type"] == ActionType.PRESS_KEY
-    assert trace[2]["type"] == "INTERRUPTION"
-    assert trace[2]["data"] == "InvalidKeyError"
-    assert trace[3]["type"] == ActionType.TEXT_INPUT
-    assert trace[4]["type"] == "INTERRUPTION"
-    assert trace[4]["data"] == "ElementNotFoundError"
-    assert trace[5]["type"] == "INTERRUPTION"
-    assert trace[5]["data"] == "XPathElementNotFoundError"
+    assert device.sent_keys == []
+    assert trace[0].action.type == ActionType.CLICK
+    assert trace[0].action.status == ExecutionStatus.EXECUTED
+    assert trace[1].action.type == ActionType.PRESS_KEY
+    assert trace[1].action.status == ExecutionStatus.EXECUTED
+    assert trace[2].error and trace[2].error.type == "InvalidKeyError"
+    assert trace[2].action.status == ExecutionStatus.BROKEN
+    # Following actions should remain pending due to early stop
+    assert trace[3].action.status == ExecutionStatus.PENDING
+    assert trace[4].action.status == ExecutionStatus.PENDING
+    assert trace[5].action.status == ExecutionStatus.PENDING

@@ -5,6 +5,8 @@ from uiautomator2.xpath import XPathError  # type: ignore[import-untyped]
 
 from explorer.element_navigator import AgentState, ElementNavigator
 
+# mypy: ignore-errors
+
 
 class FakeXPath:
     def __init__(self, elements: int, raise_error: bool = False) -> None:

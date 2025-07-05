@@ -13,7 +13,7 @@ Explorer is a toolkit for automating interaction scenarios with Android applicat
 
 ```
 explorer/
-│   action_frame.py        # typed dictionary describing a single action
+│   models.py              # base dataclasses and pydantic models
 │   element_navigator.py   # logic for locating UI elements using an LLM
 │   scenario_explorer.py   # high level scenario execution engine
 │   viewnode.py            # helpers to parse Android XML hierarchy
