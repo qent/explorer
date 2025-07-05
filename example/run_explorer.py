@@ -52,7 +52,7 @@ def main() -> None:
         api_key=args.token,
         base_url=args.api_url,
         temperature=0.0,
-        max_tokens_to_sample=8000
+        max_tokens_to_sample=8000,
     )
     http_client_without_ssl_verification = httpx.Client(verify=False)
     model._client._client = http_client_without_ssl_verification
@@ -71,7 +71,8 @@ def main() -> None:
 
     output_path = Path.cwd() / "explore_result.json"
     output_path.write_text(
-        json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps([frame.to_dict() for frame in result], ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
     print(f"Results saved to {output_path}")
 
