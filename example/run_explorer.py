@@ -1,4 +1,4 @@
-"""Command line interface for running ScenarioExplorer with Anthropic."""
+"""Command line interface for running ``ScenarioExplorer`` with multiple LLMs."""
 
 from __future__ import annotations
 
@@ -10,18 +10,23 @@ from pathlib import Path
 import httpx
 from langchain_anthropic import ChatAnthropic
 from langchain_core.callbacks import get_usage_metadata_callback
+from langchain_core.language_models import BaseChatModel
+from langchain_openai import ChatOpenAI
 
 from explorer.scenario_explorer import ScenarioExplorer
 
 # Token pricing (per one million tokens)
-INPUT_COST_PER_M_TOKEN = 0.80
-OUTPUT_COST_PER_M_TOKEN = 4.0
+COSTS: dict[str, dict[str, float]] = {
+    "haiku": {"input": 0.80, "output": 4.0},
+    "4.1-mini": {"input": 5.0, "output": 15.0},
+    "v3": {"input": 0.5, "output": 1.5},
+}
 
 
 def main() -> None:
     """Run ScenarioExplorer with the provided scenario file."""
     parser = argparse.ArgumentParser(
-        description="Run ScenarioExplorer using Claude 3.5 Haiku"
+        description="Run ScenarioExplorer using a selected model"
     )
     parser.add_argument(
         "--token",
@@ -32,9 +37,8 @@ def main() -> None:
         default=os.getenv("ANTHROPIC_API_KEY"),
     )
     parser.add_argument(
-        "--scenario-file",
+        "scenario_file",
         type=Path,
-        required=True,
         help="Path to scenario text file",
     )
     parser.add_argument(
@@ -43,19 +47,43 @@ def main() -> None:
         help="Custom Anthropic API URL",
         default=None,
     )
+    parser.add_argument(
+        "--model",
+        choices=["haiku", "4.1-mini", "v3"],
+        default="haiku",
+        help="Model to use: haiku, 4.1-mini or v3",
+    )
     args = parser.parse_args()
 
     scenario = args.scenario_file.read_text(encoding="utf-8")
 
-    model = ChatAnthropic(
-        model_name="claude-3-5-haiku-latest",
-        api_key=args.token,
-        base_url=args.api_url,
-        temperature=0.0,
-        max_tokens_to_sample=8000,
-    )
-    http_client_without_ssl_verification = httpx.Client(verify=False)
-    model._client._client = http_client_without_ssl_verification
+    model: BaseChatModel
+    if args.model == "haiku":
+        model = ChatAnthropic(
+            model_name="claude-3-5-haiku-latest",
+            api_key=args.token,
+            base_url=args.api_url,
+            temperature=0.0,
+            max_tokens_to_sample=8000,
+            timeout=None,
+            stop=None,
+        )
+        http_client_without_ssl_verification = httpx.Client(verify=False)
+        model._client._client = http_client_without_ssl_verification
+    elif args.model == "4.1-mini":
+        model = ChatOpenAI(
+            model="gpt-4.1-mini",
+            api_key=args.token,
+            base_url=args.api_url,
+            temperature=0.0,
+        )
+    else:  # v3
+        model = ChatOpenAI(
+            model="deepseek-v3",
+            api_key=args.token,
+            base_url=args.api_url or "https://api.deepseek.com",
+            temperature=0.0,
+        )
 
     explorer = ScenarioExplorer(model)
     with get_usage_metadata_callback() as cb:
@@ -64,8 +92,9 @@ def main() -> None:
     usage = cb.usage_metadata
     input_tokens = sum(v.get("input_tokens", 0) for v in usage.values())
     output_tokens = sum(v.get("output_tokens", 0) for v in usage.values())
-    input_cost = input_tokens / 1_000_000 * INPUT_COST_PER_M_TOKEN
-    output_cost = output_tokens / 1_000_000 * OUTPUT_COST_PER_M_TOKEN
+    cost_info = COSTS[args.model]
+    input_cost = input_tokens / 1_000_000 * cost_info["input"]
+    output_cost = output_tokens / 1_000_000 * cost_info["output"]
     total_tokens = input_tokens + output_tokens
     total_cost = input_cost + output_cost
 

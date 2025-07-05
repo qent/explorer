@@ -65,15 +65,15 @@ Each item in `result` is an `ActionFrame` describing the action performed, inclu
 ## Example
 
 An example CLI is provided in `example/run_explorer.py`. Pass the path to a
-scenario file and optionally your Anthropic API token. A custom API URL can be
-provided with the optional `--api-url` flag. When `--token` is omitted the
-script falls back to the value of the `ANTHROPIC_API_KEY` environment
-variable:
+scenario file as a positional argument. Optional flags allow selecting the
+underlying model (`haiku`, `4.1-mini` or `v3`) and specifying the API token and
+endpoint. When `--token` is omitted the script falls back to the value of the
+`ANTHROPIC_API_KEY` environment variable:
 
 ```bash
-python example/run_explorer.py \
-    --scenario-file /path/to/scenario.txt \
-    --token <ANTHROPIC_TOKEN> \
+python example/run_explorer.py /path/to/scenario.txt \
+    --model haiku \
+    --token <API_TOKEN> \
     --api-url https://example.com/v1
 ```
 
