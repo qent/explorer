@@ -18,8 +18,8 @@ from explorer.scenario_explorer import ScenarioExplorer
 # Token pricing (per one million tokens)
 COSTS: dict[str, dict[str, float]] = {
     "haiku": {"input": 0.80, "output": 4.0},
-    "4.1-mini": {"input": 5.0, "output": 15.0},
-    "v3": {"input": 0.5, "output": 1.5},
+    "4.1-mini": {"input": 0.40, "output": 1.60},
+    "v3": {"input": 0.27, "output": 1.10},
 }
 
 
@@ -31,10 +31,9 @@ def main() -> None:
     parser.add_argument(
         "--token",
         help=(
-            "Anthropic API token. Defaults to the value of the ANTHROPIC_API_KEY"
-            " environment variable."
+            "LLM API token"
         ),
-        default=os.getenv("ANTHROPIC_API_KEY"),
+        default=None,
     )
     parser.add_argument(
         "scenario_file",
@@ -44,14 +43,14 @@ def main() -> None:
     parser.add_argument(
         "--api-url",
         dest="api_url",
-        help="Custom Anthropic API URL",
+        help="Custom API URL",
         default=None,
     )
     parser.add_argument(
         "--model",
         choices=["haiku", "4.1-mini", "v3"],
         default="haiku",
-        help="Model to use: haiku, 4.1-mini or v3",
+        help="Model to use: haiku (Anthropic), 4.1-mini (OpenAI) or v3 (Deepseek)",
     )
     args = parser.parse_args()
 
@@ -61,7 +60,7 @@ def main() -> None:
     if args.model == "haiku":
         model = ChatAnthropic(
             model_name="claude-3-5-haiku-latest",
-            api_key=args.token,
+            api_key=args.token or os.getenv("ANTHROPIC_API_KEY"),
             base_url=args.api_url,
             temperature=0.0,
             max_tokens_to_sample=8000,
@@ -73,14 +72,14 @@ def main() -> None:
     elif args.model == "4.1-mini":
         model = ChatOpenAI(
             model="gpt-4.1-mini",
-            api_key=args.token,
+            api_key=args.token or os.getenv("OPENAI_API_KEY"),
             base_url=args.api_url,
             temperature=0.0,
         )
     else:  # v3
         model = ChatOpenAI(
-            model="deepseek-v3",
-            api_key=args.token,
+            model="deepseek-chat",
+            api_key=args.token or os.getenv("DEEPSEEK_API_KEY"),
             base_url=args.api_url or "https://api.deepseek.com",
             temperature=0.0,
         )
