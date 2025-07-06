@@ -4,6 +4,7 @@ import pytest
 from langchain_core.language_models import BaseChatModel
 
 from explorer.models import (
+    ActionFrame,
     ActionInfo,
     ActionType,
     ElementInfo,
@@ -109,3 +110,50 @@ def test_explore(monkeypatch: pytest.MonkeyPatch) -> None:
     assert trace[3].action.status == ExecutionStatus.PENDING
     assert trace[4].action.status == ExecutionStatus.PENDING
     assert trace[5].action.status == ExecutionStatus.PENDING
+
+
+class NoCallNavigator:
+    def __init__(
+        self, model: object, device: FakeDevice
+    ) -> None:  # noqa: D401 - unused
+        pass
+
+    def find_element_info(self, request: str) -> dict[str, object]:
+        raise AssertionError("Navigator should not be used")
+
+
+def test_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:
+    device = FakeDevice()
+    monkeypatch.setattr(
+        "explorer.scenario_explorer.uiautomator2.connect", lambda: device
+    )
+    monkeypatch.setattr("explorer.scenario_explorer.ElementNavigator", NoCallNavigator)
+    monkeypatch.setattr("explorer.scenario_explorer.sleep", lambda _: None)
+
+    trace = [
+        ActionFrame(
+            screen=None,
+            action=ActionInfo(
+                element=ElementInfo(description="btn", xpath="//btn"),
+                type=ActionType.CLICK,
+                status=ExecutionStatus.EXECUTED,
+            ),
+            error=None,
+        ),
+        ActionFrame(
+            screen=None,
+            action=ActionInfo(
+                element=ElementInfo(description="home"),
+                type=ActionType.PRESS_KEY,
+                status=ExecutionStatus.EXECUTED,
+            ),
+            error=None,
+        ),
+    ]
+
+    explorer = ScenarioExplorer(model=cast(BaseChatModel, object()))
+    result = explorer.run_trace(trace)
+
+    assert device.clicked == ["//btn"]
+    assert device.pressed == ["home"]
+    assert result[0].action.status == ExecutionStatus.EXECUTED
