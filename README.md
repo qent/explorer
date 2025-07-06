@@ -60,6 +60,13 @@ for frame in result:
     print(frame)
 ```
 
+The explorer can replay a previously recorded trace without invoking the language model:
+
+```python
+trace = result  # trace obtained from a previous run
+explorer.run_trace(trace)
+```
+
 Each item in `result` is an `ActionFrame` describing the action performed, including element metadata and optional input text. Interruptions such as missing elements are also recorded.
 
 ## Example

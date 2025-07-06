@@ -30,9 +30,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--token",
-        help=(
-            "LLM API token"
-        ),
+        help=("LLM API token"),
         default=None,
     )
     parser.add_argument(

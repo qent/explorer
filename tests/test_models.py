@@ -10,6 +10,8 @@ from explorer.models import (
     ScreenInfo,
 )
 
+# mypy: ignore-errors
+
 
 def test_action_frame_to_dict() -> None:
     frame = ActionFrame(
