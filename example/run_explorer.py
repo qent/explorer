@@ -1,4 +1,5 @@
 """Command line interface for running `ScenarioExplorer` with multiple LLMs."""
+from __future__ import annotations
 
 import argparse
 import json
