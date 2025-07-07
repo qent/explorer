@@ -5,7 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
+
+# Allow running without installing the ``explorer`` package
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import httpx
 from langchain_anthropic import ChatAnthropic
