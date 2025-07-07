@@ -13,6 +13,8 @@ class ActionType(str, Enum):
     CLICK = "click"
     TEXT_INPUT = "text_input"
     PRESS_KEY = "press_key"
+    SWIPE_ELEMENT = "swipe_element"
+    SWIPE_SCREEN = "swipe_screen"
 
 
 class ExecutionStatus(str, Enum):

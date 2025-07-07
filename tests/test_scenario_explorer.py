@@ -24,6 +24,9 @@ class FakeSelector:
     def click(self) -> None:
         self._device.clicked.append(self._xpath)
 
+    def swipe(self, direction: str) -> None:
+        self._device.swiped_elements.append((self._xpath, direction))
+
 
 class FakeDevice:
     def __init__(self) -> None:
@@ -31,6 +34,9 @@ class FakeDevice:
         self.sent_keys: list[str] = []
         self.pressed: list[str] = []
         self.stopped = False
+        self.swiped_elements: list[tuple[str, str]] = []
+        self.swiped_screen: list[tuple[int, int, int, int]] = []
+        self._size = (1080, 1920)
 
     def xpath(self, xpath: str) -> "FakeSelector":
         from uiautomator2 import XPathElementNotFoundError  # type: ignore[import-untyped]  # isort: skip
@@ -38,6 +44,12 @@ class FakeDevice:
         if xpath == "//notfound":
             raise XPathElementNotFoundError("not found")
         return FakeSelector(self, xpath)
+
+    def window_size(self) -> tuple[int, int]:
+        return self._size
+
+    def swipe(self, fx: int, fy: int, tx: int, ty: int) -> None:
+        self.swiped_screen.append((fx, fy, tx, ty))
 
     def send_keys(self, text: str) -> None:
         self.sent_keys.append(text)
@@ -122,6 +134,41 @@ class NoCallNavigator:
         raise AssertionError("Navigator should not be used")
 
 
+def test_swipe_actions(monkeypatch: pytest.MonkeyPatch) -> None:
+    device = FakeDevice()
+    monkeypatch.setattr(
+        "explorer.scenario_explorer.uiautomator2.connect", lambda: device
+    )
+    monkeypatch.setattr("explorer.scenario_explorer.ElementNavigator", FakeNavigator)
+    monkeypatch.setattr("explorer.scenario_explorer.sleep", lambda _: None)
+
+    scenario = Scenario(
+        actions=[
+            ActionInfo(
+                element=ElementInfo(description="btn"),
+                data="left",
+                type=ActionType.SWIPE_ELEMENT,
+            ),
+            ActionInfo(
+                element=ElementInfo(description="screen"),
+                data="up",
+                type=ActionType.SWIPE_SCREEN,
+            ),
+        ]
+    )
+
+    explorer = ScenarioExplorer(model=cast(BaseChatModel, object()))
+    state = cast(ExplorerState, {"user_scenario": scenario})
+    result = explorer._explore(state)
+    trace = result["trace"]
+
+    assert trace[0].action.status == ExecutionStatus.EXECUTED
+    assert device.swiped_elements == [("//btn", "left")]
+    width, height = device.window_size()
+    margin = 100
+    assert device.swiped_screen == [(width // 2, height - margin, width // 2, margin)]
+
+
 def test_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:
     device = FakeDevice()
     monkeypatch.setattr(
@@ -149,6 +196,26 @@ def test_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:
             ),
             error=None,
         ),
+        ActionFrame(
+            screen=None,
+            action=ActionInfo(
+                element=ElementInfo(description="el", xpath="//el"),
+                data="right",
+                type=ActionType.SWIPE_ELEMENT,
+                status=ExecutionStatus.EXECUTED,
+            ),
+            error=None,
+        ),
+        ActionFrame(
+            screen=None,
+            action=ActionInfo(
+                element=ElementInfo(description="screen"),
+                data="down",
+                type=ActionType.SWIPE_SCREEN,
+                status=ExecutionStatus.EXECUTED,
+            ),
+            error=None,
+        ),
     ]
 
     explorer = ScenarioExplorer(model=cast(BaseChatModel, object()))
@@ -156,4 +223,8 @@ def test_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert device.clicked == ["//btn"]
     assert device.pressed == ["home"]
+    assert device.swiped_elements == [("//el", "right")]
+    width, height = device.window_size()
+    margin = 100
+    assert device.swiped_screen == [(width // 2, margin, width // 2, height - margin)]
     assert result[0].action.status == ExecutionStatus.EXECUTED

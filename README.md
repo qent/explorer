@@ -8,6 +8,7 @@ Explorer is a toolkit for automating interaction scenarios with Android applicat
 - **Element navigation** – analyses an Android view hierarchy and finds elements by name or description using a language model.
 - **Scenario execution** – executes parsed steps against a real device using `uiautomator2` and collects action traces.
 - **Device key press** – allows pressing hardware and soft keys during exploration. Supported names: `home`, `back`, `left`, `right`, `up`, `down`, `center`, `menu`, `search`, `enter`, `delete`, `recent`, `volume_up`, `volume_down`, `volume_mute`, `camera`, `power`.
+- **Swipe gestures** – supports swiping on interface elements or across the screen.
 
 ## Project layout
 
