@@ -112,6 +112,7 @@ def test_explore(monkeypatch: pytest.MonkeyPatch) -> None:
     assert trace[0].action.status == ExecutionStatus.EXECUTED
     assert trace[1].action.type == ActionType.PRESS_KEY
     assert trace[1].action.status == ExecutionStatus.EXECUTED
+    assert trace[1].screen and trace[1].screen.hierarchy == "<hierarchy/>"
     assert trace[2].error and trace[2].error.type == "InvalidKeyError"
     assert trace[2].action.status == ExecutionStatus.BROKEN
     # Following actions should remain pending due to early stop
@@ -159,6 +160,7 @@ def test_swipe_actions(monkeypatch: pytest.MonkeyPatch) -> None:
     width, height = device.window_size()
     margin = 100
     assert device.swiped_screen == [(width // 2, height - margin, width // 2, margin)]
+    assert trace[1].screen and trace[1].screen.hierarchy == "<hierarchy/>"
 
 
 def test_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:

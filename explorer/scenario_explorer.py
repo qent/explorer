@@ -166,10 +166,20 @@ class ScenarioExplorer:
                     )
                     action.status = ExecutionStatus.BROKEN
                     break
+                frame.screen = ScreenInfo(
+                    name="",
+                    description="",
+                    hierarchy=element_navigator.full_hierarchy,
+                )
                 self._perform_action(device, action)
                 continue
 
             if action.type is ActionType.SWIPE_SCREEN:
+                frame.screen = ScreenInfo(
+                    name="",
+                    description="",
+                    hierarchy=element_navigator.full_hierarchy,
+                )
                 self._perform_action(device, action)
                 continue
 
