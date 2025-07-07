@@ -70,7 +70,8 @@ class ScenarioExplorer:
         self._graph = graph_builder.compile()
         self._model = model
 
-    def _perform_action(self, device: uiautomator2.Device, action: ActionInfo) -> None:
+    @staticmethod
+    def _perform_action(device: uiautomator2.Device, action: ActionInfo) -> None:
         """Execute ``action`` on ``device`` without using the language model."""
 
         if action.type is ActionType.PRESS_KEY:
@@ -189,15 +190,15 @@ class ScenarioExplorer:
                     dict[str, object],
                     element_navigator.find_element_info(action.element.description),
                 )
+                element_dict = cast(dict[str, object], info.get("element", {}))
                 screen = ScreenInfo(
-                    name=cast(str, info.get("screen", "")),
-                    description=cast(str, info.get("screen_description", "")),
+                    name=cast(str, element_dict.get("screen", "")),
+                    description=cast(str, element_dict.get("screen_description", "")),
                     hierarchy=element_navigator.full_hierarchy,
                 )
-                element_dict = cast(dict[str, object], info.get("element", {}))
+                frame.screen = screen
                 action.element.name = cast(str | None, element_dict.get("name"))
                 action.element.xpath = cast(str | None, element_dict.get("xpath"))
-                frame.screen = screen
                 try:
                     self._perform_action(device, action)
                 except XPathElementNotFoundError:

@@ -1,15 +1,10 @@
-"""Command line interface for running ``ScenarioExplorer`` with multiple LLMs."""
-
-from __future__ import annotations
+"""Command line interface for running `ScenarioExplorer` with multiple LLMs."""
 
 import argparse
 import json
 import os
 import sys
 from pathlib import Path
-
-# Allow running without installing the ``explorer`` package
-sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import httpx
 from langchain_anthropic import ChatAnthropic
@@ -18,6 +13,9 @@ from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 
 from explorer.scenario_explorer import ScenarioExplorer
+
+# Allow running without installing the `explorer` package
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 # Token pricing (per one million tokens)
 COSTS: dict[str, dict[str, float]] = {
@@ -34,7 +32,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--token",
-        help=("LLM API token"),
+        help="LLM API token",
         default=None,
     )
     parser.add_argument(
@@ -58,6 +56,7 @@ def main() -> None:
 
     scenario = args.scenario_file.read_text(encoding="utf-8")
 
+    http_client_without_ssl_verification = httpx.Client(verify=False)
     model: BaseChatModel
     if args.model == "haiku":
         model = ChatAnthropic(
@@ -69,7 +68,7 @@ def main() -> None:
             timeout=None,
             stop=None,
         )
-        http_client_without_ssl_verification = httpx.Client(verify=False)
+        # noinspection PyProtectedMember
         model._client._client = http_client_without_ssl_verification
     elif args.model == "4.1-mini":
         model = ChatOpenAI(
@@ -77,13 +76,15 @@ def main() -> None:
             api_key=args.token or os.getenv("OPENAI_API_KEY"),
             base_url=args.api_url,
             temperature=0.0,
+            http_client=http_client_without_ssl_verification,
         )
     else:  # v3
         model = ChatOpenAI(
-            model="deepseek-chat",
+            model="deepseek-0324",
             api_key=args.token or os.getenv("DEEPSEEK_API_KEY"),
             base_url=args.api_url or "https://api.deepseek.com",
             temperature=0.0,
+            http_client=http_client_without_ssl_verification,
         )
 
     explorer = ScenarioExplorer(model)
