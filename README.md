@@ -32,16 +32,16 @@ Development utilities are also included in `requirements.txt`.
 
 ## Installation
 
-The library can be installed directly from GitHub:
-
-```bash
-pip install git+https://github.com/qent/explorer.git
-```
-
-For development install optional dependencies as well:
+Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
+```
+
+To work on the project itself install it in editable mode:
+
+```bash
+pip install -e .
 ```
 
 ## Usage
@@ -83,6 +83,9 @@ python example/run_explorer.py /path/to/scenario.txt \
     --token <API_TOKEN> \
     --api-url https://example.com/v1
 ```
+
+Run this command from the repository root. The script adjusts ``sys.path`` so
+the local ``explorer`` sources are used without installation.
 
 The script runs the scenario against the currently connected emulator or device
 and writes the formatted results to `explore_result.json` in the working
