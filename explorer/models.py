@@ -32,13 +32,20 @@ class ElementInfo(BaseModel):
 
 
 class ActionInfo(BaseModel):
-    """Model of action with device."""
+    """Description of a single action to perform on the device."""
 
-    element: ElementInfo = Field(
-        description="Short description of element for action or name of the key"
+    element: Optional[ElementInfo] = Field(
+        None,
+        description=(
+            "Element to interact with. ``None`` for actions without a UI element"
+        ),
     )
     data: Optional[str] = Field(
-        None, description="Data required for an action, such as text for a text input"
+        None,
+        description=(
+            "Additional data required for the action. This is used for text input, "
+            "swipe direction or key name."
+        ),
     )
     type: ActionType = Field(
         ActionType.CLICK,

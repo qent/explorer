@@ -84,12 +84,8 @@ def test_explore(monkeypatch: pytest.MonkeyPatch) -> None:
     scenario = Scenario(
         actions=[
             ActionInfo(element=ElementInfo(description="btn1"), type=ActionType.CLICK),
-            ActionInfo(
-                element=ElementInfo(description="home"), type=ActionType.PRESS_KEY
-            ),
-            ActionInfo(
-                element=ElementInfo(description="bad"), type=ActionType.PRESS_KEY
-            ),
+            ActionInfo(data="home", type=ActionType.PRESS_KEY),
+            ActionInfo(data="bad", type=ActionType.PRESS_KEY),
             ActionInfo(
                 element=ElementInfo(description="input"),
                 data="hello",
@@ -149,11 +145,7 @@ def test_swipe_actions(monkeypatch: pytest.MonkeyPatch) -> None:
                 data="left",
                 type=ActionType.SWIPE_ELEMENT,
             ),
-            ActionInfo(
-                element=ElementInfo(description="screen"),
-                data="up",
-                type=ActionType.SWIPE_SCREEN,
-            ),
+            ActionInfo(data="up", type=ActionType.SWIPE_SCREEN),
         ]
     )
 
@@ -190,7 +182,7 @@ def test_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:
         ActionFrame(
             screen=None,
             action=ActionInfo(
-                element=ElementInfo(description="home"),
+                data="home",
                 type=ActionType.PRESS_KEY,
                 status=ExecutionStatus.EXECUTED,
             ),
@@ -209,7 +201,6 @@ def test_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:
         ActionFrame(
             screen=None,
             action=ActionInfo(
-                element=ElementInfo(description="screen"),
                 data="down",
                 type=ActionType.SWIPE_SCREEN,
                 status=ExecutionStatus.EXECUTED,

@@ -68,7 +68,13 @@ trace = result  # trace obtained from a previous run
 explorer.run_trace(trace)
 ```
 
-Each item in `result` is an `ActionFrame` describing the action performed, including element metadata and optional input text. Interruptions such as missing elements are also recorded.
+Each item in `result` is an `ActionFrame` describing the action performed. The
+`action` field stores an `ActionInfo` instance with details of the performed
+interaction.  When the action involves a UI element (e.g. click or text
+input) the `element` field contains its description.  For actions without an
+element, such as pressing hardware keys or swiping across the screen, this
+field is `null` and the `data` field holds the key name or swipe direction.
+Interruptions such as missing elements are also recorded.
 
 ## Example
 
