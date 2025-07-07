@@ -1,4 +1,5 @@
 """Command line interface for running `ScenarioExplorer` with multiple LLMs."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,6 +15,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 
 from explorer.scenario_explorer import ScenarioExplorer
+from explorer.scenario_parser import ScenarioParser
 
 # Allow running without installing the `explorer` package
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -55,7 +57,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    scenario = args.scenario_file.read_text(encoding="utf-8")
+    scenario_text = args.scenario_file.read_text(encoding="utf-8")
 
     http_client_without_ssl_verification = httpx.Client(verify=False)
     model: BaseChatModel
@@ -88,9 +90,11 @@ def main() -> None:
             http_client=http_client_without_ssl_verification,
         )
 
+    parser = ScenarioParser(model)
     explorer = ScenarioExplorer(model)
     with get_usage_metadata_callback() as cb:
-        result = explorer.explore(scenario)
+        scenario = parser.parse(scenario_text)
+        result = explorer.explore(scenario.actions)
 
     usage = cb.usage_metadata
     input_tokens = sum(v.get("input_tokens", 0) for v in usage.values())

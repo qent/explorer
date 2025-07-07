@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
 from time import sleep
 from typing import TypedDict, cast
 
 import uiautomator2
 from langchain_core.language_models import BaseChatModel
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
-from langgraph.constants import START
-from langgraph.graph import StateGraph
 from uiautomator2 import XPathElementNotFoundError
 
 from explorer.element_navigator import ElementNavigator
@@ -22,7 +17,6 @@ from explorer.models import (
     Scenario,
     ScreenInfo,
 )
-from explorer.utils import get_file_content
 
 # mypy: ignore-errors
 
@@ -51,7 +45,6 @@ VALID_KEYS: set[str] = {
 class ExplorerState(TypedDict, total=False):
     """State shared across scenario execution steps."""
 
-    user_request: str
     user_scenario: Scenario
     trace: list[ActionFrame]
 
@@ -60,14 +53,6 @@ class ScenarioExplorer:
     """High level scenario execution engine."""
 
     def __init__(self, model: BaseChatModel) -> None:
-        graph_builder = StateGraph(ExplorerState)
-        graph_builder.add_node("extract_scenario", self._extract_scenario)
-        graph_builder.add_node("explore", self._explore)
-
-        graph_builder.add_edge(START, "extract_scenario")
-        graph_builder.add_edge("extract_scenario", "explore")
-
-        self._graph = graph_builder.compile()
         self._model = model
 
     @staticmethod
@@ -112,22 +97,6 @@ class ScenarioExplorer:
         else:
             selector.click()
         action.status = ExecutionStatus.EXECUTED
-
-    def _extract_scenario(self, state: ExplorerState) -> ExplorerState:
-        parser = PydanticOutputParser(pydantic_object=Scenario)
-        prompt_path = (
-            Path(__file__).parent / "prompts" / "extract_step_by_step_scenario.md"
-        )
-        template_str = get_file_content(str(prompt_path))
-        request = PromptTemplate.from_template(template_str).invoke(
-            {
-                "scenario": state["user_request"],
-                "format_instructions": parser.get_format_instructions(),
-            }
-        )
-        response = self._model.invoke(request)
-        state["user_scenario"] = parser.parse(response.text())
-        return state
 
     def _explore(self, state: ExplorerState) -> ExplorerState:
         device = uiautomator2.connect()
@@ -223,8 +192,11 @@ class ScenarioExplorer:
         device.stop_uiautomator()
         return state
 
-    def explore(self, request: str) -> list[ActionFrame]:
-        result = self._graph.invoke({"user_request": request})
+    def explore(self, scenario: list[ActionInfo]) -> list[ActionFrame]:
+        """Execute a prepared scenario."""
+
+        state = cast(ExplorerState, {"user_scenario": Scenario(actions=scenario)})
+        result = self._explore(state)
         return result["trace"]
 
     def run_trace(self, trace: list[ActionFrame]) -> list[ActionFrame]:

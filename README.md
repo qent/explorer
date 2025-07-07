@@ -17,6 +17,7 @@ explorer/
 │   models.py              # base dataclasses and pydantic models
 │   element_navigator.py   # logic for locating UI elements using an LLM
 │   scenario_explorer.py   # high level scenario execution engine
+│   scenario_parser.py     # converts natural language into actions
 │   viewnode.py            # helpers to parse Android XML hierarchy
 │   utils.py               # small utilities
 │   prompts/
@@ -47,16 +48,19 @@ pip install -e .
 
 ## Usage
 
-The main entry point is `ScenarioExplorer`. Provide it with a `BaseChatModel` implementation from LangChain and run `explore()` with a natural language scenario:
+The main entry point is `ScenarioExplorer`. Provide it with a `BaseChatModel` implementation from LangChain. Use `ScenarioParser` to convert natural language instructions into a scenario and pass its actions to `explore()`:
 
 ```python
 from langchain.chat_models import ChatOpenAI  # or any other model
 
 from explorer.scenario_explorer import ScenarioExplorer
+from explorer.scenario_parser import ScenarioParser
 
 model = ChatOpenAI()
+parser = ScenarioParser(model)
 explorer = ScenarioExplorer(model)
-result = explorer.explore("Open the app, log in and check my account balance")
+scenario = parser.parse("Open the app, log in and check my account balance")
+result = explorer.explore(scenario.actions)
 for frame in result:
     print(frame)
 ```
