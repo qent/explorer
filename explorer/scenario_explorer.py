@@ -78,7 +78,29 @@ class ScenarioExplorer:
             action.status = ExecutionStatus.EXECUTED
             return
 
+        if action.type is ActionType.SWIPE_SCREEN:
+            width, height = device.window_size()
+            direction = cast(str, action.data)
+            margin = 100
+            if direction == "up":
+                fx, fy, tx, ty = width // 2, height - margin, width // 2, margin
+            elif direction == "down":
+                fx, fy, tx, ty = width // 2, margin, width // 2, height - margin
+            elif direction == "left":
+                fx, fy, tx, ty = width - margin, height // 2, margin, height // 2
+            else:  # right
+                fx, fy, tx, ty = margin, height // 2, width - margin, height // 2
+            device.swipe(fx, fy, tx, ty)
+            action.status = ExecutionStatus.EXECUTED
+            return
+
         selector = device.xpath(cast(str, action.element.xpath))
+
+        if action.type is ActionType.SWIPE_ELEMENT:
+            selector.swipe(cast(str, action.data))
+            action.status = ExecutionStatus.EXECUTED
+            return
+
         if action.type is ActionType.TEXT_INPUT:
             selector.click()
             sleep(3)
@@ -142,6 +164,10 @@ class ScenarioExplorer:
                     )
                     action.status = ExecutionStatus.BROKEN
                     break
+                self._perform_action(device, action)
+                continue
+
+            if action.type is ActionType.SWIPE_SCREEN:
                 self._perform_action(device, action)
                 continue
 
