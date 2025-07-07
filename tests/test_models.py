@@ -29,3 +29,15 @@ def test_action_frame_to_dict() -> None:
     assert action["type"] == ActionType.CLICK
     assert error["type"] == "SomeError"
     json.dumps(data)  # Ensure serializable
+
+
+def test_action_frame_without_element() -> None:
+    frame = ActionFrame(
+        screen=None,
+        action=ActionInfo(data="home", type=ActionType.PRESS_KEY),
+        error=None,
+    )
+    data = frame.to_dict()
+    action = cast(dict[str, str], data["action"])
+    assert action["data"] == "home"
+    assert data["screen"] is None

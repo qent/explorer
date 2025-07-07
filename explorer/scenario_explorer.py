@@ -74,7 +74,8 @@ class ScenarioExplorer:
         """Execute ``action`` on ``device`` without using the language model."""
 
         if action.type is ActionType.PRESS_KEY:
-            device.press(action.element.description)
+            key = cast(str, action.data)
+            device.press(key)
             action.status = ExecutionStatus.EXECUTED
             return
 
@@ -94,6 +95,7 @@ class ScenarioExplorer:
             action.status = ExecutionStatus.EXECUTED
             return
 
+        assert action.element is not None
         selector = device.xpath(cast(str, action.element.xpath))
 
         if action.type is ActionType.SWIPE_ELEMENT:
@@ -154,7 +156,7 @@ class ScenarioExplorer:
                 continue
 
             if action.type is ActionType.PRESS_KEY:
-                key = action.element.description
+                key = cast(str, action.data)
                 if key not in VALID_KEYS:
                     frame.error = Error(type="InvalidKeyError", message=None)
                     frame.screen = ScreenInfo(
@@ -172,6 +174,7 @@ class ScenarioExplorer:
                 continue
 
             try:
+                assert action.element is not None
                 info = cast(
                     dict[str, object],
                     element_navigator.find_element_info(action.element.description),
